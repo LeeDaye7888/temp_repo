@@ -34,27 +34,6 @@ public class CartServiceImpl implements CartService {
     public CartResponse create(CreateCartRequest cartRequest, Member member) {
         Item item = existItemCheck(cartRequest.itemId());
 
-        //장바구니 넣으려는 상품 수량 > 실제 상품 재고
-        int cartItemCount = cartRequest.cartItemCount();
-        if (cartItemCount > item.getCount()) {
-            throw new BusinessException(NOT_ENOUGH_STOCK);
-        }
-
-        //품절 상태인지 확인
-        if (item.getItemState() == ItemState.SOLD_OUT) {
-            throw new BusinessException(SOLD_OUT_STATE_ITEM, "상품이 품절되었습니다.");
-        }
-        //판매중단된 상태인지 확인
-        if (item.getItemState() == ItemState.DISCONTINUED) {
-            throw new BusinessException(DISCONTINUED_ITEM, "판매가 중단된 상품입니다.");
-        }
-
-        //장바구니에 이미 존재하는 상품이면
-        Cart existingCart = cartRepository.findByItemAndMember(item, member);
-        if (existingCart != null) {
-            throw new BusinessException(CART_IN_ITEM_DUPLICATED);
-        }
-
         // CartRequest.Option -> Cart.Option
         List<Cart.Option> options = cartRequest.optionValue().stream()
             .map(option -> new Cart.Option(option.key(), option.value()))
@@ -68,6 +47,11 @@ public class CartServiceImpl implements CartService {
             .optionValues(options)
             .build();
 
+        //장바구니에 이미 존재하는 상품이면
+        Cart existingCart = cartRepository.findByItemAndMember(item, member);
+        if (existingCart != null) {
+            throw new BusinessException(CART_IN_ITEM_DUPLICATED);
+        }
         cartRepository.save(cart);
 
         return getCartResponse(cart);
