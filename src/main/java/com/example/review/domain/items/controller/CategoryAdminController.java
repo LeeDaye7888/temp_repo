@@ -2,7 +2,7 @@ package com.example.review.domain.items.controller;
 
 import com.example.review.domain.items.dto.CategoryRequest;
 import com.example.review.domain.items.dto.CategoryResponse;
-import com.example.review.domain.items.service.implement.CategoryServiceImpl;
+import com.example.review.domain.items.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "(관리자 권한) 카테고리 관련 api", description = "관리자만 접근 가능한 카테고리 관련 api입니다.")
 public class CategoryAdminController {
 
-    private final CategoryServiceImpl categoryService;
+    private final CategoryService categoryService;
 
     @PostMapping("/categories")
     @ResponseStatus(HttpStatus.CREATED)

@@ -1,6 +1,6 @@
 package com.example.review.domain.members.controller;
 
-import com.example.review.domain.members.service.implement.MemberServiceImpl;
+import com.example.review.domain.members.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "(판매자 권한) 멤버 관련 api", description = "판매자의 멤버 관련 api들입니다.")
 public class MemberSellerController {
 
-    private final MemberServiceImpl memberService;
+    private final MemberService memberService;
 
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)

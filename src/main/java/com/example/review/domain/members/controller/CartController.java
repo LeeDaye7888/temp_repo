@@ -1,7 +1,7 @@
 package com.example.review.domain.members.controller;
 
 import com.example.review.domain.members.dto.*;
-import com.example.review.domain.members.service.implement.CartServiceImpl;
+import com.example.review.domain.members.service.CartService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "장바구니 관련 api", description = "장바구니 등록, 수정, 조회, 삭제 api입니다.")
 public class CartController {
 
-    private final CartServiceImpl cartService;
+    private final CartService cartService;
 
     // 장바구니 등록
     @PostMapping("/carts")

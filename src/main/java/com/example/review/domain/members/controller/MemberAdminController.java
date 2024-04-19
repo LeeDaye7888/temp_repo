@@ -1,7 +1,7 @@
 package com.example.review.domain.members.controller;
 
 import com.example.review.domain.members.dto.MemberResponse;
-import com.example.review.domain.members.service.implement.MemberServiceImpl;
+import com.example.review.domain.members.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "(관리자 권한) 멤버 관련 api", description = "관리자의 멤버 관련 api들입니다.")
 public class MemberAdminController {
 
-    private final MemberServiceImpl memberService;
+    private final MemberService memberService;
 
     // 회원 전체 조회
     @GetMapping("/members")

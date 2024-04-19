@@ -1,7 +1,7 @@
 package com.example.review.domain.orders.controller;
 
 import com.example.review.domain.orders.dto.*;
-import com.example.review.domain.orders.service.implement.OrderServiceImpl;
+import com.example.review.domain.orders.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "주문 관련 api", description = "주문 등록, 취소, 조회 api입니다.")
 public class OrderController {
 
-    private final OrderServiceImpl orderService;
+    private final OrderService orderService;
 
     //주문번호 UUID 생성
     @PostMapping("/order-keys")

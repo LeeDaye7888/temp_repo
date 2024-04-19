@@ -3,7 +3,7 @@ package com.example.review.domain.members.controller;
 import com.example.review.domain.members.dto.MemberSignInRequest;
 import com.example.review.domain.members.dto.MemberSignInResponse;
 import com.example.review.domain.members.dto.MemberSignUpRequest;
-import com.example.review.domain.members.service.implement.AuthServiceImpl;
+import com.example.review.domain.members.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "로그인, 회원가입 관련 api", description = "사용자가 회원가입, 로그인하는 api들입니다.")
 public class AuthController {
 
-    private final AuthServiceImpl memberService;
+    private final AuthService memberService;
 
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)

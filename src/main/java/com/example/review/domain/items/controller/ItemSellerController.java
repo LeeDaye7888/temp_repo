@@ -1,7 +1,7 @@
 package com.example.review.domain.items.controller;
 
 import com.example.review.domain.items.dto.*;
-import com.example.review.domain.items.service.implement.ItemServiceImpl;
+import com.example.review.domain.items.service.ItemService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,15 +28,16 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "(판매자 권한) 상품 관련 api", description = "판매자의 상품 등록, 수정, 조회, 삭제 api입니다.")
 public class ItemSellerController {
 
-    private final ItemServiceImpl itemService;
+    private final ItemService itemService;
 
     //(판매자)상품 등록 + 이미지 추가(필수) + 옵션 설정(필수X)
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/items")
     @Operation(summary = "상품 등록 api", description = "상품을 등록하는 api 입니다.")
-    public CreateItemResponse addItem(@Valid @RequestPart(value = "itemRequest", required = false) ItemRequest itemRequest,
-                                      @RequestPart(value = "file", required = false) List<MultipartFile> multipartFiles,
-                                      @AuthenticationPrincipal User user) {
+    public CreateItemResponse addItem(
+        @Valid @RequestPart(value = "itemRequest", required = false) ItemRequest itemRequest,
+        @RequestPart(value = "file", required = false) List<MultipartFile> multipartFiles,
+        @AuthenticationPrincipal User user) {
         return itemService.create(itemRequest, multipartFiles, user);
     }
 
@@ -45,9 +46,9 @@ public class ItemSellerController {
     @PatchMapping("/items/{itemId}")
     @Operation(summary = "상품 수정 api", description = "상품을 수정하는 api 입니다.")
     public UpdateItemResponse updateItem(@PathVariable Long itemId,
-                                         @Valid @RequestPart(value = "itemRequest", required = false) UpdateItemRequest itemRequest,
-                                         @RequestPart(value = "file", required = false)  List<MultipartFile> multipartFiles,
-                                         @AuthenticationPrincipal User user) {
+        @Valid @RequestPart(value = "itemRequest", required = false) UpdateItemRequest itemRequest,
+        @RequestPart(value = "file", required = false) List<MultipartFile> multipartFiles,
+        @AuthenticationPrincipal User user) {
         return itemService.update(itemId, itemRequest, multipartFiles, user);
     }
 
@@ -63,7 +64,8 @@ public class ItemSellerController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/items")
     @Operation(summary = "상품 판매자 조회 api", description = "판매자 자신이 등록한 상품을 조회하는 api 입니다.")
-    public SellerItemsResponse getSellerItems(Pageable pageable, @AuthenticationPrincipal User user) {
+    public SellerItemsResponse getSellerItems(Pageable pageable,
+        @AuthenticationPrincipal User user) {
         return itemService.getSellerAll(pageable, user);
     }
 }
