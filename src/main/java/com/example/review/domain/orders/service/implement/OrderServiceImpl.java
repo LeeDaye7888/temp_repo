@@ -9,6 +9,7 @@ import com.example.review.domain.members.entity.Cart;
 import com.example.review.domain.members.entity.Member;
 import com.example.review.domain.members.repository.CartRepository;
 import com.example.review.domain.members.repository.MemberRepository;
+import com.example.review.domain.orders.dto.OrderKeyResponse;
 import com.example.review.domain.orders.dto.OrderPageResponse;
 import com.example.review.domain.orders.dto.OrderRequest;
 import com.example.review.domain.orders.dto.OrderResponse;
@@ -22,6 +23,7 @@ import com.example.review.domain.orders.service.OrderService;
 import com.example.review.global.exception.BusinessException;
 import com.example.review.global.exception.ErrorCode;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -46,6 +48,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    public OrderKeyResponse generateKey() {
+        UUID orderKey = UUID.randomUUID();
+        return new OrderKeyResponse(orderKey);
+    }
+
+    @Override
+    @Transactional
     public OrderResponse create(OrderRequest orderRequest, User user) {
         Member member = getMember(user);
 
@@ -57,7 +66,7 @@ public class OrderServiceImpl implements OrderService {
         //orderRequest에 있는 각 주문된 상품을 반복하면서, 해당 주문 항목의 상품 id를 이용하여 주문한 아이템 가져옴
         for (OrderRequest.OrderedItem OrderedItem : orderRequest.orderedItems()) {
             Item item = itemRepository.findById(OrderedItem.itemId())
-                    .orElseThrow(() -> new BusinessException(NOT_FOUND_ITEM));
+                .orElseThrow(() -> new BusinessException(NOT_FOUND_ITEM));
 
             //상품 재고가 품절일 경우 주문 불가
             if (item.getItemState() == ItemState.SOLD_OUT) {
@@ -80,7 +89,8 @@ public class OrderServiceImpl implements OrderService {
             itemRepository.save(item);
 
             //주문된 상품을 주문 상품 DB에 저장
-            OrderItem orderItem = OrderItem.createOrderItem(member, item, item.getItemName(), OrderedItem.price(), OrderedItem.count(), order, OrderedItem.optionValues());
+            OrderItem orderItem = OrderItem.createOrderItem(member, item, item.getItemName(),
+                OrderedItem.price(), OrderedItem.count(), order, OrderedItem.optionValues());
             orderItemRepository.save(orderItem);
 
             //주문한 상품이 장바구니에 존재할 경우
@@ -92,12 +102,12 @@ public class OrderServiceImpl implements OrderService {
 
         //결제 정보 저장
         Pay pay = Pay.builder()
-                .cardCompany(orderRequest.cardCompany())
-                .cardNum(orderRequest.cardNum())
-                .order(order)
-                .memberId(member.getMemberId())
-                .payPrice(order.getTotalPrice())
-                .build();
+            .cardCompany(orderRequest.cardCompany())
+            .cardNum(orderRequest.cardNum())
+            .order(order)
+            .memberId(member.getMemberId())
+            .payPrice(order.getTotalPrice())
+            .build();
 
         //결제 DB 저장
         payRepository.save(pay);
@@ -117,10 +127,10 @@ public class OrderServiceImpl implements OrderService {
         Member member = getMember(user);
 
         Order order = orderRepository.findById(payCancelRequest.orderId())
-                .orElseThrow(() -> new BusinessException(NOT_EQUAL_MERCHANT_ID, "주문 번호가 같지 않습니다."));
+            .orElseThrow(() -> new BusinessException(NOT_EQUAL_MERCHANT_ID, "주문 번호가 같지 않습니다."));
 
         Pay pay = payRepository.findByOrder(order)
-                .orElseThrow(() -> new BusinessException(NOT_FOUND_PAY));
+            .orElseThrow(() -> new BusinessException(NOT_FOUND_PAY));
 
         //결제 회원과 로그인한 회원이 다를 경우
         if (!pay.getMemberId().equals(member.getMemberId())) {
@@ -142,13 +152,13 @@ public class OrderServiceImpl implements OrderService {
         orderItemRepository.deleteAll(orderItems);
 
         PayCancel payCancel = PayCancel.builder()
-                .order(pay.getOrder())
-                .merchantId(payCancelRequest.merchantId())
-                .cancelReason(payCancelRequest.cancelReason())
-                .cancelPrice(pay.getPayPrice())
-                .cardCompany(pay.getCardCompany())
-                .cardNum(pay.getCardNum())
-                .build();
+            .order(pay.getOrder())
+            .merchantId(payCancelRequest.merchantId())
+            .cancelReason(payCancelRequest.cancelReason())
+            .cancelPrice(pay.getPayPrice())
+            .cardCompany(pay.getCardCompany())
+            .cardNum(pay.getCardNum())
+            .build();
 
         //결제취소 DB 저장
         payCancelRepository.save(payCancel);
@@ -171,19 +181,19 @@ public class OrderServiceImpl implements OrderService {
 
     private Member getMember(User user) {
         return memberRepository.findByEmail(user.getUsername())
-                .orElseThrow(() -> new BusinessException(NOT_FOUND_MEMBER));
+            .orElseThrow(() -> new BusinessException(NOT_FOUND_MEMBER));
     }
 
     private List<OrderResponse.OrderedItem> toOrderedItem(List<OrderItem> orderItems) {
         return orderItems.stream()
-                .map(orderItem -> new OrderResponse.OrderedItem(
-                        orderItem.getItem().getItemId(),
-                        orderItem.getOrderItemName(),
-                        orderItem.getOrderItemCount(),
-                        orderItem.getOrderItemPrice(),
-                        orderItem.getOptionValues()
-                ))
-                .toList();
+            .map(orderItem -> new OrderResponse.OrderedItem(
+                orderItem.getItem().getItemId(),
+                orderItem.getOrderItemName(),
+                orderItem.getOrderItemCount(),
+                orderItem.getOrderItemPrice(),
+                orderItem.getOptionValues()
+            ))
+            .toList();
     }
 
     //ItemResponse 코드 중복 방지
@@ -194,18 +204,18 @@ public class OrderServiceImpl implements OrderService {
         List<OrderResponse.OrderedItem> orderedItems = toOrderedItem(orderItems);
 
         return new OrderResponse(
-                order.getOrderId(),
-                order.getReceiverName(),
-                order.getReceiverPhone(),
-                order.getZipcode(),
-                order.getAddress(),
-                order.getRequestMessage(),
-                order.getTotalPrice(),
-                order.getMerchantId(),
-                order.getOrderState(),
-                pay.getCardCompany(), // Pay 엔티티에서 카드사 정보 가져옴
-                pay.getCardNum(), // Pay 엔티티에서 카드 번호 정보 가져옴
-                orderedItems
+            order.getOrderId(),
+            order.getReceiverName(),
+            order.getReceiverPhone(),
+            order.getZipcode(),
+            order.getAddress(),
+            order.getRequestMessage(),
+            order.getTotalPrice(),
+            order.getMerchantId(),
+            order.getOrderState(),
+            pay.getCardCompany(), // Pay 엔티티에서 카드사 정보 가져옴
+            pay.getCardNum(), // Pay 엔티티에서 카드 번호 정보 가져옴
+            orderedItems
         );
     }
 
@@ -213,38 +223,39 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse getOne(User user, Long orderId) {
         getMember(user);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_ORDERS));
+            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_ORDERS));
         Pay pay = payRepository.findByOrder(order)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAY));
+            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_PAY));
         return getOrderResponse(order, pay);
     }
 
     @Override
     public OrderPageResponse getAll(User user, Pageable pageable) {
         Member member = getMember(user);
-        PageRequest pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+        PageRequest pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+            pageable.getSort());
         Page<Order> orders = orderRepository.findAllByMember(member, pageRequest);
 
         List<OrderPageResponse.OrderList> orderList = orders.stream()
-                .map(order -> {
-                    // 주문 상품 리스트
-                    List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
-                    List<OrderResponse.OrderedItem> orderedItem = toOrderedItem(orderItems);
+            .map(order -> {
+                // 주문 상품 리스트
+                List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
+                List<OrderResponse.OrderedItem> orderedItem = toOrderedItem(orderItems);
 
-                    // 주문 리스트
-                    return new OrderPageResponse.OrderList(
-                            order.getOrderId(),
-                            order.getOrderState(),
-                            order.getCreatedAt(),
-                            orderedItem);
-                })
-                .collect(Collectors.toList());
+                // 주문 리스트
+                return new OrderPageResponse.OrderList(
+                    order.getOrderId(),
+                    order.getOrderState(),
+                    order.getCreatedAt(),
+                    orderedItem);
+            })
+            .collect(Collectors.toList());
 
         return new OrderPageResponse(
-                orders.getTotalPages(),
-                (int) orders.getTotalElements(),
-                orders.getNumber(),
-                orders.getSize(),
-                orderList);
+            orders.getTotalPages(),
+            (int) orders.getTotalElements(),
+            orders.getNumber(),
+            orders.getSize(),
+            orderList);
     }
 }

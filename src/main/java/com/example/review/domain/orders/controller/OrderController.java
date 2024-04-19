@@ -33,9 +33,9 @@ public class OrderController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "주문번호(UUID) 생성 api", description = "주문 관련 주문번호(UUID)를 생성하는 api입니다.")
     public OrderKeyResponse generateOrderKey() {
-        UUID orderKey = UUID.randomUUID();
-        return new OrderKeyResponse(orderKey);
+        return orderService.generateKey();
     }
+
 
     //주문 생성
     @PostMapping("/orders")
