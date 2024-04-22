@@ -12,17 +12,18 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception ex, HttpServletRequest request) {
-        log.error("request: %s , message: %s".formatted(request.getRequestURI(), ex.getLocalizedMessage()), ex);
-        var error = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getLocalizedMessage());
-        return ResponseEntity.internalServerError().body(error);
+    public ResponseEntity<String> handleException(Exception ex, HttpServletRequest request) {
+        log.error("Request: %s , Message: %s".formatted(request.getRequestURI(),
+            ex.getLocalizedMessage()), ex);
+        return ResponseEntity.internalServerError().body("서버 내부 오류가 발생했습니다.");
     }
 
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException ex, HttpServletRequest request) {
+    public ResponseEntity<String> handleBusinessException(BusinessException ex,
+        HttpServletRequest request) {
         log.error("Request: {}, Message: {}", request.getRequestURI(), ex.getMessage(), ex);
-        var error = new ErrorResponse(ex.getErrorCode().getStatus(), ex.getErrorCode().getMessage());
-        return ResponseEntity.status(ex.getErrorCode().getStatus()).body(error);
+        return ResponseEntity.status(ex.getErrorCode().getStatus())
+            .body(ex.getErrorCode().getMessage());
     }
 }
 
