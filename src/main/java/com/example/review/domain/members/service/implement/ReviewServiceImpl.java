@@ -1,5 +1,7 @@
 package com.example.review.domain.members.service.implement;
 
+import static com.example.review.global.exception.ErrorCode.CAN_NOT_CANCEL_PAY;
+
 import com.example.review.domain.items.entity.Item;
 import com.example.review.domain.items.repository.ItemRepository;
 import com.example.review.domain.members.dto.ReviewPageResponse;
@@ -41,9 +43,10 @@ public class ReviewServiceImpl implements ReviewService {
         OrderItem orderItem = orderItemRepository.findById(request.OrderItemId())
             .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_ORDER_ITEM));
 
-        // 주문한 회원의 id랑 로그인한 id가 다른지 확인한다.
-        Long orderMemberId = orderItem.getOrder().getMember().getMemberId();
-        validateId(orderMemberId, member.getMemberId(), ErrorCode.CANT_WRITE_REVIEW);
+        // 주문한 회원의 id랑 로그인한 id가 다른지 확인
+        if (!orderItem.getOrder().getMember().equals(member)) {
+            throw new BusinessException(ErrorCode.CANT_WRITE_REVIEW);
+        }
 
         Item item = orderItem.getItem();
 
@@ -69,10 +72,11 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = reviewRepository.findById(reviewId)
             .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_REVIEW));
 
-        // 리뷰를 작성한 회원의 id랑 로그인한 id가 다른지 확인한다.
-        Long reviewWriterId = review.getMember().getMemberId();
+        // 리뷰를 작성한 회원의 id랑 로그인한 id가 다른지 확인
         Member member = getMember(user);
-        validateId(reviewWriterId, member.getMemberId(), ErrorCode.NOT_MATCH_REVIEW);
+        if (!review.getMember().getMemberId().equals(member.getMemberId())) {
+            throw new BusinessException(ErrorCode.NOT_MATCH_REVIEW);
+        }
 
         review.updateReview(reviewRequest.title(),
             reviewRequest.content(),
@@ -85,19 +89,13 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = reviewRepository.findById(reviewId)
             .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_REVIEW));
 
-        // 리뷰를 작성한 회원의 id랑 로그인한 id가 다른지 확인한다.
-        Long reviewWriterId = review.getMember().getMemberId();
+        // 리뷰를 작성한 회원의 id랑 로그인한 id가 다른지 확인
         Member member = getMember(user);
-        validateId(reviewWriterId, member.getMemberId(), ErrorCode.NOT_MATCH_REVIEW);
-
-        reviewRepository.deleteById(reviewId);
-    }
-
-    public void validateId(Long id, Long loginId, ErrorCode errorCode) {
-        if (!id.equals(loginId)) {
-            throw new BusinessException(errorCode);
+        if (!review.getMember().getMemberId().equals(member.getMemberId())) {
+            throw new BusinessException(ErrorCode.NOT_MATCH_REVIEW);
         }
 
+        reviewRepository.deleteById(reviewId);
     }
 
     @Override
