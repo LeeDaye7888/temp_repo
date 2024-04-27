@@ -3,7 +3,6 @@ package com.example.review.domain.items.controller;
 import com.example.review.domain.items.dto.ItemPageResponse;
 import com.example.review.domain.items.dto.ItemResponse;
 import com.example.review.domain.items.service.ItemService;
-import com.example.review.domain.items.service.implement.ItemServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

@@ -38,9 +38,10 @@ public class ItemOption extends BaseEntity {
         this.optionValues = optionValues;
     }
 
-    public record Option (
-            String key,
-            String value
+    public record Option(
+        String key,
+        String value
     ) {
+
     }
 }

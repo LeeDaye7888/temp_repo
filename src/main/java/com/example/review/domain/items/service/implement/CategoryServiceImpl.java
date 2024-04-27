@@ -27,23 +27,24 @@ public class CategoryServiceImpl implements CategoryService {
     public List<CategoryResponse> getAll() {
         List<Category> categories = categoryRepository.findAll();
         return categories.stream()
-                .map(category -> {
-                    return new CategoryResponse(category.getCategoryId(), category.getCategoryName());
-                })
-                .collect(Collectors.toList());
+            .map(category -> {
+                return new CategoryResponse(category.getCategoryId(), category.getCategoryName());
+            })
+            .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public CategoryResponse create(CategoryRequest request) {
-        Optional<Category> foundCategory = categoryRepository.findByCategoryName(request.categoryName());
+        Optional<Category> foundCategory = categoryRepository.findByCategoryName(
+            request.categoryName());
         if (foundCategory.isPresent()) {
             throw new BusinessException(ErrorCode.CATEGORY_EXIST_GOODS);
         }
 
         Category savedCategory = categoryRepository.save(Category.builder()
-                .categoryName(request.categoryName())
-                .build());
+            .categoryName(request.categoryName())
+            .build());
         return new CategoryResponse(savedCategory.getCategoryId(), savedCategory.getCategoryName());
     }
 
@@ -51,7 +52,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void delete(Long categoryId) {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_CATEGORY));
+            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_CATEGORY));
 
         if (itemRepository.findFirstByCategory(category).isPresent()) {
             throw new BusinessException(ErrorCode.CATEGORY_EXIST_GOODS);
@@ -64,7 +65,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void update(CategoryRequest request, Long categoryId) {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_CATEGORY));
+            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_CATEGORY));
         category.updateCategory(request);
     }
 }

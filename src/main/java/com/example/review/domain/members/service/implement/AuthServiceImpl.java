@@ -28,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthServiceImpl implements AuthService {
 
     private final MemberRepository memberRepository;
-    private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtTokenProvider jwtTokenProvider;
@@ -40,10 +39,10 @@ public class AuthServiceImpl implements AuthService {
         checkIfIsDuplicated(request.email());
 
         Member member = Member.builder()
-                .email(request.email())
-                .password(bCryptPasswordEncoder.encode(request.password()))
-                .role(Role.builder().roleName(request.roleName()).build())
-                .build();
+            .email(request.email())
+            .password(bCryptPasswordEncoder.encode(request.password()))
+            .role(Role.builder().roleName(request.roleName()).build())
+            .build();
 
         memberRepository.save(member);
     }
@@ -57,25 +56,29 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     @Override
     public MemberSignInResponse signIn(MemberSignInRequest request) {
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(request.email(), request.password()); //// 1. username + password 를 기반으로 Authentication 객체 생성. 이때 authentication 은 인증 여부를 확인하는 authenticated 값이 false
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+            request.email(),
+            request.password()); //// 1. username + password 를 기반으로 Authentication 객체 생성. 이때 authentication 은 인증 여부를 확인하는 authenticated 값이 false
         Authentication authentication;
 
         try {
-            authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken); //2. 실제 검증. authenticate() 메서드를 통해 요청된 Member 에 대한 검증 진행// authenticate 메서드가 실행될 때 CustomUserDetailsService 에서 만든 loadUserByUsername 메서드 실행
+            authentication = authenticationManagerBuilder.getObject().authenticate(
+                authenticationToken); //2. 실제 검증. authenticate() 메서드를 통해 요청된 Member 에 대한 검증 진행// authenticate 메서드가 실행될 때 CustomUserDetailsService 에서 만든 loadUserByUsername 메서드 실행
         } catch (AuthenticationException e) {
             throw new BusinessException(ErrorCode.CHECK_LOGIN_ID_OR_PASSWORD);
         }
 
         Member member = memberRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_MEMBER));
+            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_MEMBER));
         String accessToken = jwtTokenProvider.createAccessToken(member); // 3. 인증정보를 기반으로 JWT 토큰 생성
         String refreshToken = jwtTokenProvider.createRefreshToken();
 
         // 해당 멤버의 리프레시 토큰가 이미 있으면 새로운 리프레시 토큰으로 재발급해주고, 없으면 저장해줄것
         refreshTokenRepository.findByMember(member)
-                .ifPresentOrElse(
-                        token -> token.updateRefreshToken(refreshToken),
-                        () -> refreshTokenRepository.save(RefreshToken.builder().refreshToken(refreshToken).member(member).build()));
+            .ifPresentOrElse(
+                token -> token.updateRefreshToken(refreshToken),
+                () -> refreshTokenRepository.save(
+                    RefreshToken.builder().refreshToken(refreshToken).member(member).build()));
 
         return new MemberSignInResponse(accessToken, refreshToken);
     }

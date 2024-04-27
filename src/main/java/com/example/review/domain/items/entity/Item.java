@@ -48,7 +48,8 @@ public class Item extends BaseEntity {
     private Member member;
 
     @Builder
-    public Item(ItemOption itemOption, String itemName, int itemPrice, String itemDetail, int count, Category category, Member member, ItemState itemState) {
+    public Item(ItemOption itemOption, String itemName, int itemPrice, String itemDetail, int count,
+        Category category, Member member, ItemState itemState) {
         this.itemName = itemName;
         this.itemPrice = itemPrice;
         this.itemDetail = itemDetail;
@@ -60,7 +61,8 @@ public class Item extends BaseEntity {
     }
 
     //상품 수정할 때 메소드
-    public void updateItem(String itemName, int itemPrice, int count, String itemDetail, Category category, ItemState itemState) {
+    public void updateItem(String itemName, int itemPrice, int count, String itemDetail,
+        Category category, ItemState itemState) {
         this.itemName = itemName;
         this.itemPrice = itemPrice;
         this.count = count;
@@ -76,7 +78,7 @@ public class Item extends BaseEntity {
 
     //상품 재고가 0이 되면 품절 상태로
     public void ToSoldOutState() {
-        if(this.count == 0) {
+        if (this.count == 0) {
             this.itemState = ItemState.SOLD_OUT;
         }
     }
