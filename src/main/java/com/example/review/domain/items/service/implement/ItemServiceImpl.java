@@ -39,7 +39,8 @@ public class ItemServiceImpl implements ItemService {
     // 상품 등록 + 이미지 추가(필수) + 옵션 추가(필수X)
     @Override
     @Transactional
-    public CreateItemResponse create(ItemRequest itemRequest, List<MultipartFile> multipartFiles, User user) {
+    public CreateItemResponse create(ItemRequest itemRequest, List<MultipartFile> multipartFiles,
+        User user) {
         Member member = getMember(user);
         System.out.println("사용자 정보: {}" + member);
 
@@ -49,29 +50,29 @@ public class ItemServiceImpl implements ItemService {
         }
 
         Category category = categoryRepository.findById(itemRequest.categoryId()).orElseThrow(
-                () -> new BusinessException(NOT_FOUND_CATEGORY));
+            () -> new BusinessException(NOT_FOUND_CATEGORY));
 
         //옵션 정보 저장
         List<ItemOption.Option> optionValues = itemRequest.optionValue() != null ?
-                itemRequest.optionValue().stream()
-                        .map(option -> new ItemOption.Option(option.key(), option.value()))
-                        .toList() :
-                new ArrayList<>();
+            itemRequest.optionValue().stream()
+                .map(option -> new ItemOption.Option(option.key(), option.value()))
+                .toList() :
+            new ArrayList<>();
 
         ItemOption itemOption = ItemOption.builder()
-                .optionValues(optionValues)
-                .build();
+            .optionValues(optionValues)
+            .build();
 
         Item item = Item.builder()
-                .itemName(itemRequest.itemName())
-                .itemPrice(itemRequest.price())
-                .itemDetail(itemRequest.description())
-                .category(category)
-                .count(itemRequest.count())
-                .member(member)
-                .itemOption(itemOption)
-                .itemState(ItemState.ON_SALE) // 따로 추가함
-                .build();
+            .itemName(itemRequest.itemName())
+            .itemPrice(itemRequest.price())
+            .itemDetail(itemRequest.description())
+            .category(category)
+            .count(itemRequest.count())
+            .member(member)
+            .itemOption(itemOption)
+            .itemState(ItemState.ON_SALE) // 따로 추가함
+            .build();
 
         Item savedItem = itemRepository.save(item);
 
@@ -87,8 +88,8 @@ public class ItemServiceImpl implements ItemService {
 
         // 이미지 DB 저장
         List<ItemImage> imageList = imageUrls.stream()
-                .map(url -> ItemImage.builder().imageUrl(url).item(savedItem).build())
-                .toList();
+            .map(url -> ItemImage.builder().imageUrl(url).item(savedItem).build())
+            .toList();
 
         itemImageRepository.saveAll(imageList);
 
@@ -101,7 +102,8 @@ public class ItemServiceImpl implements ItemService {
     //상품 수정
     @Override
     @Transactional
-    public UpdateItemResponse update(Long itemId, UpdateItemRequest itemRequest, List<MultipartFile> multipartFiles, User user) {
+    public UpdateItemResponse update(Long itemId, UpdateItemRequest itemRequest,
+        List<MultipartFile> multipartFiles, User user) {
         Member member = getMember(user);
 
         // 수정할 상품 이름이 이미 존재하면 예외처리
@@ -110,10 +112,10 @@ public class ItemServiceImpl implements ItemService {
         }
 
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new BusinessException(NOT_FOUND_ITEM));
+            .orElseThrow(() -> new BusinessException(NOT_FOUND_ITEM));
 
         Category category = categoryRepository.findById(itemRequest.categoryId())
-                .orElseThrow(() -> new BusinessException(NOT_FOUND_CATEGORY));
+            .orElseThrow(() -> new BusinessException(NOT_FOUND_CATEGORY));
 
         //상품의 회원(판매자) != 현재 로그인한 회원
         if (!item.getMember().equals(member)) {
@@ -122,7 +124,7 @@ public class ItemServiceImpl implements ItemService {
 
         // 엔티티 수정
         item.updateItem(itemRequest.itemName(), itemRequest.price(),
-                itemRequest.count(), itemRequest.description(), category, itemRequest.itemState());
+            itemRequest.count(), itemRequest.description(), category, itemRequest.itemState());
 
         // 상품의 기존 옵션 삭제
         List<ItemOption> options = itemOptionRepository.findByItem(item); // 아이템 관련해서 아이템 옵션 조회
@@ -132,11 +134,11 @@ public class ItemServiceImpl implements ItemService {
         if (itemRequest.optionValue() != null && !itemRequest.optionValue().isEmpty()) {
             //옵션값 -> 엔티티 변환
             List<ItemOption.Option> optionValues = itemRequest.optionValue().stream()
-                    .map(option -> new ItemOption.Option(option.key(), option.value()))
-                    .toList();
+                .map(option -> new ItemOption.Option(option.key(), option.value()))
+                .toList();
             ItemOption itemOption = ItemOption.builder()
-                    .optionValues(optionValues)
-                    .build();
+                .optionValues(optionValues)
+                .build();
             itemOptionRepository.save(itemOption);
         }
 
@@ -152,8 +154,8 @@ public class ItemServiceImpl implements ItemService {
 
         // 이미지 정보 저장
         List<ItemImage> images = imageUrls.stream()
-                .map(img -> ItemImage.builder().imageUrl(img).item(item).build())
-                .toList();
+            .map(img -> ItemImage.builder().imageUrl(img).item(item).build())
+            .toList();
         itemImageRepository.saveAll(images);
 
         List<Long> itemImgIds = images.stream().map(ItemImage::getItemImageId).toList();
@@ -169,7 +171,7 @@ public class ItemServiceImpl implements ItemService {
 
         // 해당 상품이 없을 경우
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new BusinessException(NOT_FOUND_ITEM, "존재하는 상품이 아닙니다."));
+            .orElseThrow(() -> new BusinessException(NOT_FOUND_ITEM, "존재하는 상품이 아닙니다."));
 
         //현재 로그인한(상품 삭제하려는) 사용자 == 상품 등록했던 회원
         if (!item.getMember().equals(member)) {
@@ -195,21 +197,21 @@ public class ItemServiceImpl implements ItemService {
         Page<Item> sellerItems = itemRepository.findByMember(pageable, member);
 
         List<SellerItemsResponse.sellerItem> sellerItemList = sellerItems.stream()
-                .map(sellerItem -> new SellerItemsResponse.sellerItem(
-                        sellerItem.getItemId(),
-                        sellerItem.getItemName(),
-                        sellerItem.getItemPrice(),
-                        sellerItem.getCount(),
-                        sellerItem.getItemState()
-                ))
-                .toList();
+            .map(sellerItem -> new SellerItemsResponse.sellerItem(
+                sellerItem.getItemId(),
+                sellerItem.getItemName(),
+                sellerItem.getItemPrice(),
+                sellerItem.getCount(),
+                sellerItem.getItemState()
+            ))
+            .toList();
 
         return new SellerItemsResponse(
-                sellerItems.getTotalPages(),
-                (int) sellerItems.getTotalElements(),
-                sellerItems.getNumber(),
-                sellerItems.getSize(),
-                sellerItemList
+            sellerItems.getTotalPages(),
+            (int) sellerItems.getTotalElements(),
+            sellerItems.getNumber(),
+            sellerItems.getSize(),
+            sellerItemList
         );
     }
 
@@ -219,46 +221,47 @@ public class ItemServiceImpl implements ItemService {
     public ItemResponse getOne(Long itemId) {
         //해당 상품이 없을 경우
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new BusinessException(NOT_FOUND_ITEM, "존재하는 상품이 아닙니다."));
+            .orElseThrow(() -> new BusinessException(NOT_FOUND_ITEM, "존재하는 상품이 아닙니다."));
 
         // 이미지 URL 조회
         List<String> imgUrls = itemImageRepository.findByItem(item).stream()
-                .map(ItemImage::getImageUrl)
-                .toList();
+            .map(ItemImage::getImageUrl)
+            .toList();
 
         return new ItemResponse(
-                item.getItemId(),
-                item.getItemName(),
-                item.getCategory().getCategoryId(),
-                item.getItemPrice(),
-                item.getItemOption().getOptionValues().stream()
-                        .map(option -> new ItemResponse.Option(option.key(), option.value()))
-                        .toList(),
-                item.getItemState(),
-                item.getItemDetail(),
-                imgUrls
+            item.getItemId(),
+            item.getItemName(),
+            item.getCategory().getCategoryId(),
+            item.getItemPrice(),
+            item.getItemOption().getOptionValues().stream()
+                .map(option -> new ItemResponse.Option(option.key(), option.value()))
+                .toList(),
+            item.getItemState(),
+            item.getItemDetail(),
+            imgUrls
         );
     }
 
     private Member getMember(User user) {
         return memberRepository.findByEmail(user.getUsername())
-                .orElseThrow(() -> new BusinessException(NOT_FOUND_MEMBER));
+            .orElseThrow(() -> new BusinessException(NOT_FOUND_MEMBER));
     }
 
     //ItemResponse 코드 중복 방지
-    private CreateItemResponse getCreateItemResponse(Item item, List<String> imgUrls, List<Long> itemImageIds) {
+    private CreateItemResponse getCreateItemResponse(Item item, List<String> imgUrls,
+        List<Long> itemImageIds) {
         return new CreateItemResponse(
-                item.getItemId(),
-                item.getItemName(),
-                item.getCategory().getCategoryId(),
-                item.getItemPrice(),
-                item.getCount(),
-                item.getItemOption().getOptionValues().stream()
-                        .map(option -> new CreateItemResponse.Option(option.key(), option.value()))
-                        .toList(),
-                item.getItemDetail(),
-                itemImageIds,
-                imgUrls
+            item.getItemId(),
+            item.getItemName(),
+            item.getCategory().getCategoryId(),
+            item.getItemPrice(),
+            item.getCount(),
+            item.getItemOption().getOptionValues().stream()
+                .map(option -> new CreateItemResponse.Option(option.key(), option.value()))
+                .toList(),
+            item.getItemDetail(),
+            itemImageIds,
+            imgUrls
         );
     }
 
@@ -266,9 +269,10 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemPageResponse getAll(Pageable pageable, Long categoryId) {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new BusinessException(NOT_FOUND_CATEGORY));
+            .orElseThrow(() -> new BusinessException(NOT_FOUND_CATEGORY));
 
-        PageRequest pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+        PageRequest pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+            pageable.getSort());
         Page<Item> items = itemRepository.findByCategory(pageRequest, category);
 
         if (items.isEmpty()) {
@@ -276,17 +280,17 @@ public class ItemServiceImpl implements ItemService {
         }
 
         List<ItemPageResponse.ItemList> itemList = items.stream()
-                .map(item -> new ItemPageResponse.ItemList(
-                        item.getItemId(),
-                        item.getItemName(),
-                        item.getItemPrice()
-                ))
-                .toList();
+            .map(item -> new ItemPageResponse.ItemList(
+                item.getItemId(),
+                item.getItemName(),
+                item.getItemPrice()
+            ))
+            .toList();
 
         return new ItemPageResponse(items.getTotalPages(),
-                (int) items.getTotalElements(),
-                items.getNumber(),
-                items.getSize(),
-                itemList);
+            (int) items.getTotalElements(),
+            items.getNumber(),
+            items.getSize(),
+            itemList);
     }
 }

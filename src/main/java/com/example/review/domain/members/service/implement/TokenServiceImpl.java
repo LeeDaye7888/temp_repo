@@ -27,7 +27,7 @@ public class TokenServiceImpl implements TokenService {
 
         if (!tokenProvider.validate(refreshToken)) {
             RefreshToken foundRefreshToken = refreshTokenRepository.findByRefreshToken(refreshToken)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_REFRESH_TOKEN));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_REFRESH_TOKEN));
             String accessToken = tokenProvider.createAccessToken(foundRefreshToken.getMember());
             return new CreateAccessTokenReponse(accessToken);
         }

@@ -11,8 +11,12 @@ import org.springframework.security.core.userdetails.User;
 public interface OrderService {
 
     OrderKeyResponse generateKey();
+
     OrderResponse create(OrderRequest orderRequest, User user);
+
     void payCancel(PayCancelRequest payCancelRequest, User user);
+
     OrderResponse getOne(User user, Long orderId);
+
     OrderPageResponse getAll(User user, Pageable pageable);
 }

@@ -27,7 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class S3Service  {
+public class S3Service {
 
     private final AmazonS3 s3Client;
 
@@ -47,9 +47,9 @@ public class S3Service  {
     public AmazonS3Client amazonS3Client() {
         BasicAWSCredentials awsCreds = new BasicAWSCredentials(accessKey, secretKey);
         return (AmazonS3Client) AmazonS3ClientBuilder.standard()
-                .withRegion(region)
-                .withCredentials(new AWSStaticCredentialsProvider(awsCreds))
-                .build();
+            .withRegion(region)
+            .withCredentials(new AWSStaticCredentialsProvider(awsCreds))
+            .build();
     }
 
     public List<String> upload(List<MultipartFile> multipartFile) {
@@ -66,18 +66,20 @@ public class S3Service  {
             objectMetadata.setContentLength(file.getSize());
             objectMetadata.setContentType(file.getContentType());
 
-            try(InputStream inputStream = file.getInputStream()) {
-                s3Client.putObject(new PutObjectRequest(bucket, fileName, inputStream, objectMetadata)
+            try (InputStream inputStream = file.getInputStream()) {
+                s3Client.putObject(
+                    new PutObjectRequest(bucket, fileName, inputStream, objectMetadata)
                         .withCannedAcl(CannedAccessControlList.PublicRead));
                 //업로드된 이미지의 url 생성하여 리스트에 추가
                 String imgUrl = generateImgUrl(fileName);
                 imgUrlList.add(imgUrl);
-            } catch(IOException e) {
+            } catch (IOException e) {
                 throw new BusinessException(UPLOAD_ERROR_IMAGE);
             }
         }
         return imgUrlList;
     }
+
     //파일 이름으로 S3에 업로드된 이미지 URL 생성
     private String generateImgUrl(String filename) {
         return "https://" + bucket + ".s3." + region + ".amazonaws.com/" + filename;
@@ -108,7 +110,7 @@ public class S3Service  {
     }
 
     // DeleteObject를 통해 S3 파일 삭제
-    public void deleteFile(String fileName){
+    public void deleteFile(String fileName) {
         DeleteObjectRequest deleteObjectRequest = new DeleteObjectRequest(bucket, fileName);
         s3Client.deleteObject(deleteObjectRequest);
     }

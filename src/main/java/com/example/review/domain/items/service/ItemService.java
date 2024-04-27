@@ -7,10 +7,18 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface ItemService {
-    CreateItemResponse create(ItemRequest itemRequest, List<MultipartFile> multipartFiles, User user);
-    UpdateItemResponse update(Long itemId, UpdateItemRequest itemRequest, List<MultipartFile> multipartFiles, User user);
+
+    CreateItemResponse create(ItemRequest itemRequest, List<MultipartFile> multipartFiles,
+        User user);
+
+    UpdateItemResponse update(Long itemId, UpdateItemRequest itemRequest,
+        List<MultipartFile> multipartFiles, User user);
+
     void delete(Long itemId, User user);
+
     SellerItemsResponse getSellerAll(Pageable pageable, User user);
+
     ItemResponse getOne(Long itemId);
+
     ItemPageResponse getAll(Pageable pageable, Long categoryId);
 }
