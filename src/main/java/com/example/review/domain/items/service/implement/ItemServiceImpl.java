@@ -40,8 +40,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public CreateItemResponse create(ItemRequest itemRequest, List<MultipartFile> multipartFiles,
-        User user) {
-        Member member = getMember(user);
+        Member member) {
         System.out.println("사용자 정보: {}" + member);
 
         // 같은 이름의 상품이 있으면 예외처리, 같은 이름의 상품을 등록할 수 없음
@@ -103,8 +102,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public UpdateItemResponse update(Long itemId, UpdateItemRequest itemRequest,
-        List<MultipartFile> multipartFiles, User user) {
-        Member member = getMember(user);
+        List<MultipartFile> multipartFiles, Member member) {
 
         // 수정할 상품 이름이 이미 존재하면 예외처리
         if (itemRepository.findByItemName(itemRequest.itemName()).isPresent()) {
@@ -166,8 +164,7 @@ public class ItemServiceImpl implements ItemService {
     // 상품 삭제
     @Override
     @Transactional
-    public void delete(Long itemId, User user) {
-        Member member = getMember(user);
+    public void delete(Long itemId, Member member) {
 
         // 해당 상품이 없을 경우
         Item item = itemRepository.findById(itemId)
@@ -192,8 +189,7 @@ public class ItemServiceImpl implements ItemService {
 
     //상품 전체 조회(판매자)
     @Override
-    public SellerItemsResponse getSellerAll(Pageable pageable, User user) {
-        Member member = getMember(user);
+    public SellerItemsResponse getSellerAll(Pageable pageable, Member member) {
         Page<Item> sellerItems = itemRepository.findByMember(pageable, member);
 
         List<SellerItemsResponse.sellerItem> sellerItemList = sellerItems.stream()

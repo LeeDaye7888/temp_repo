@@ -1,7 +1,12 @@
 package com.example.review.domain.items.controller;
 
+import static com.example.review.global.exception.ErrorCode.NOT_FOUND_MEMBER;
+
 import com.example.review.domain.items.dto.*;
 import com.example.review.domain.items.service.ItemService;
+import com.example.review.domain.members.entity.Member;
+import com.example.review.domain.members.repository.MemberRepository;
+import com.example.review.global.exception.BusinessException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -29,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ItemSellerController {
 
     private final ItemService itemService;
+    private final MemberRepository memberRepository;
 
     //(판매자)상품 등록 + 이미지 추가(필수) + 옵션 설정(필수X)
     @ResponseStatus(HttpStatus.CREATED)
@@ -38,7 +44,8 @@ public class ItemSellerController {
         @Valid @RequestPart(value = "itemRequest", required = false) ItemRequest itemRequest,
         @RequestPart(value = "file", required = false) List<MultipartFile> multipartFiles,
         @AuthenticationPrincipal User user) {
-        return itemService.create(itemRequest, multipartFiles, user);
+        Member member = getMember(user);
+        return itemService.create(itemRequest, multipartFiles, member);
     }
 
     //상품 수정
@@ -49,7 +56,8 @@ public class ItemSellerController {
         @Valid @RequestPart(value = "itemRequest", required = false) UpdateItemRequest itemRequest,
         @RequestPart(value = "file", required = false) List<MultipartFile> multipartFiles,
         @AuthenticationPrincipal User user) {
-        return itemService.update(itemId, itemRequest, multipartFiles, user);
+        Member member = getMember(user);
+        return itemService.update(itemId, itemRequest, multipartFiles, member);
     }
 
     //상품 삭제
@@ -57,7 +65,8 @@ public class ItemSellerController {
     @DeleteMapping("/items/{itemId}")
     @Operation(summary = "상품 삭제 api", description = "상품을 삭제하는 api 입니다.")
     public void deleteItem(@PathVariable Long itemId, @AuthenticationPrincipal User user) {
-        itemService.delete(itemId, user);
+        Member member = getMember(user);
+        itemService.delete(itemId, member);
     }
 
     //상품 조회(판매자)
@@ -66,6 +75,13 @@ public class ItemSellerController {
     @Operation(summary = "상품 판매자 조회 api", description = "판매자 자신이 등록한 상품을 조회하는 api 입니다.")
     public SellerItemsResponse getSellerItems(Pageable pageable,
         @AuthenticationPrincipal User user) {
-        return itemService.getSellerAll(pageable, user);
+        Member member = getMember(user);
+        return itemService.getSellerAll(pageable, member);
+    }
+
+    private Member getMember(User user) {
+        getMember(user);
+        return memberRepository.findByEmail(user.getUsername())
+            .orElseThrow(() -> new BusinessException(NOT_FOUND_MEMBER));
     }
 }

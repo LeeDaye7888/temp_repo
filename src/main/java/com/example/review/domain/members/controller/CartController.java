@@ -81,7 +81,7 @@ public class CartController {
     }
 
     private Member getMember(User user) {
-        Member member = getMember(user);
+        getMember(user);
         return memberRepository.findByEmail(user.getUsername())
             .orElseThrow(() -> new BusinessException(NOT_FOUND_MEMBER));
     }
