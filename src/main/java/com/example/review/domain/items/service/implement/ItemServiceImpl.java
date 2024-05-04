@@ -93,7 +93,6 @@ public class ItemServiceImpl implements ItemService {
             return getCreateItemResponse(savedItem, imageUrls, itemImgIds);
         } catch (Exception e) {
             // 이미지 업로드 실패 시 상품 롤백
-            itemRepository.delete(item);
             throw new BusinessException(UPLOAD_ERROR_IMAGE, "S3 이미지 업로드 실패로 상품 등록 실패", e);
         }
 
