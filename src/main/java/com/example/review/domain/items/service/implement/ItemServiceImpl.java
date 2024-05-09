@@ -41,7 +41,6 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     public CreateItemResponse create(ItemRequest itemRequest, List<MultipartFile> multipartFiles,
         Member member) {
-        System.out.println("사용자 정보: {}" + member);
 
         // 같은 이름의 상품이 있으면 예외처리, 같은 이름의 상품을 등록할 수 없음
         if (itemRepository.findByItemName(itemRequest.itemName()).isPresent()) {
@@ -73,28 +72,29 @@ public class ItemServiceImpl implements ItemService {
             .itemState(ItemState.ON_SALE) // 따로 추가함
             .build();
 
-        Item savedItem = itemRepository.save(item);
+        try {
+            Item savedItem = itemRepository.save(item);
 
-        // S3 저장
-        System.out.println("S3에 이미지를 업로드합니다.");
-        List<String> imageUrls = s3Service.upload(multipartFiles);
+            List<String> imageUrls = s3Service.upload(multipartFiles);
 
-        //이미지 1장 이상 등록 안했을때 에러 처리
-        if (imageUrls.isEmpty()) {
-            throw new BusinessException(REQUIRED_IMAGE, "이미지는 필수로 등록해야합니다.");
+            if (imageUrls.isEmpty()) {
+                throw new BusinessException(REQUIRED_IMAGE, "이미지는 필수로 등록해야합니다.");
+            }
+            System.out.println("업로드된 이미지 URL: {}" + imageUrls);
+
+            List<ItemImage> imageList = imageUrls.stream()
+                .map(url -> ItemImage.builder().imageUrl(url).item(savedItem).build())
+                .toList();
+
+            itemImageRepository.saveAll(imageList);
+
+            List<Long> itemImgIds = imageList.stream().map(ItemImage::getItemImageId).toList();
+
+            return getCreateItemResponse(savedItem, imageUrls, itemImgIds);
+        } catch (Exception e) {
+            // 이미지 업로드 실패 시 상품 롤백
+            throw new BusinessException(UPLOAD_ERROR_IMAGE, "S3 이미지 업로드 실패로 상품 등록 실패", e);
         }
-        System.out.println("업로드된 이미지 URL: {}" + imageUrls);
-
-        // 이미지 DB 저장
-        List<ItemImage> imageList = imageUrls.stream()
-            .map(url -> ItemImage.builder().imageUrl(url).item(savedItem).build())
-            .toList();
-
-        itemImageRepository.saveAll(imageList);
-
-        List<Long> itemImgIds = imageList.stream().map(ItemImage::getItemImageId).toList();
-
-        return getCreateItemResponse(savedItem, imageUrls, itemImgIds);
 
     }
 
