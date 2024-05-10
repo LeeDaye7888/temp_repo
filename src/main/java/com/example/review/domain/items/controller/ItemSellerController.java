@@ -94,5 +94,6 @@ public class ItemSellerController {
         return memberRepository.findByEmail(user.getUsername())
             .orElseThrow(() -> new BusinessException(NOT_FOUND_MEMBER));
     }
+
 }
 
