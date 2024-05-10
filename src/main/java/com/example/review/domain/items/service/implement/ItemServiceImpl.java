@@ -36,14 +36,36 @@ public class ItemServiceImpl implements ItemService {
     private final MemberRepository memberRepository;
     private final CategoryRepository categoryRepository;
 
-    // 상품 등록 + 이미지 추가(필수) + 옵션 추가(필수X)
+    //상품 이미지 업로드
     @Override
     @Transactional
-    public CreateItemResponse create(ItemRequest itemRequest, List<MultipartFile> multipartFiles,
-        Member member) {
-        System.out.println("사용자 정보: {}" + member);
+    public UploadImageResponse uploadItemImage(Long itemId, List<MultipartFile> multipartFiles, Member member) {
+        Item item = itemRepository.findById(itemId)
+            .orElseThrow(()-> new BusinessException(NOT_FOUND_ITEM));
 
-        // 같은 이름의 상품이 있으면 예외처리, 같은 이름의 상품을 등록할 수 없음
+        List<String> imageUrls = s3Service.upload(multipartFiles);
+        if (imageUrls.isEmpty()) {
+            throw new BusinessException(REQUIRED_IMAGE, "이미지가 필수로 등록해야 합니다.");
+        }
+
+        List<ItemImage> imageList = imageUrls.stream()
+            .map(url -> ItemImage.builder().imageUrl(url).item(item).build())
+            .toList();
+
+        List<ItemImage> savedItemImages = itemImageRepository.saveAll(imageList);
+        List<Long> imageIds = savedItemImages.stream()
+            .map(ItemImage::getItemImageId)
+            .toList();
+
+        return new UploadImageResponse(imageIds, imageUrls);
+    }
+
+
+    // 상품 등록
+    @Override
+    @Transactional
+    public CreateItemResponse createItem(ItemRequest itemRequest, Member member) {
+        // 같은 이름의 상품이 있을 경우
         if (itemRepository.findByItemName(itemRequest.itemName()).isPresent()) {
             throw new BusinessException(DUPLICATE_ITEM, "이미 존재하는 상품입니다.");
         }
@@ -75,26 +97,7 @@ public class ItemServiceImpl implements ItemService {
 
         Item savedItem = itemRepository.save(item);
 
-        // S3 저장
-        System.out.println("S3에 이미지를 업로드합니다.");
-        List<String> imageUrls = s3Service.upload(multipartFiles);
-
-        //이미지 1장 이상 등록 안했을때 에러 처리
-        if (imageUrls.isEmpty()) {
-            throw new BusinessException(REQUIRED_IMAGE, "이미지는 필수로 등록해야합니다.");
-        }
-        System.out.println("업로드된 이미지 URL: {}" + imageUrls);
-
-        // 이미지 DB 저장
-        List<ItemImage> imageList = imageUrls.stream()
-            .map(url -> ItemImage.builder().imageUrl(url).item(savedItem).build())
-            .toList();
-
-        itemImageRepository.saveAll(imageList);
-
-        List<Long> itemImgIds = imageList.stream().map(ItemImage::getItemImageId).toList();
-
-        return getCreateItemResponse(savedItem, imageUrls, itemImgIds);
+        return getCreateItemResponse(savedItem);
 
     }
 
@@ -244,8 +247,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     //ItemResponse 코드 중복 방지
-    private CreateItemResponse getCreateItemResponse(Item item, List<String> imgUrls,
-        List<Long> itemImageIds) {
+    private CreateItemResponse getCreateItemResponse(Item item) {
         return new CreateItemResponse(
             item.getItemId(),
             item.getItemName(),
@@ -255,9 +257,7 @@ public class ItemServiceImpl implements ItemService {
             item.getItemOption().getOptionValues().stream()
                 .map(option -> new CreateItemResponse.Option(option.key(), option.value()))
                 .toList(),
-            item.getItemDetail(),
-            itemImageIds,
-            imgUrls
+            item.getItemDetail()
         );
     }
 

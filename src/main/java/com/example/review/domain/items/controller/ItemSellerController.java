@@ -36,16 +36,26 @@ public class ItemSellerController {
     private final ItemService itemService;
     private final MemberRepository memberRepository;
 
-    //(판매자)상품 등록 + 이미지 추가(필수) + 옵션 설정(필수X)
+    //(판매자)상품 등록
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/items")
     @Operation(summary = "상품 등록 api", description = "상품을 등록하는 api 입니다.")
     public CreateItemResponse addItem(
         @Valid @RequestPart(value = "itemRequest", required = false) ItemRequest itemRequest,
+        @AuthenticationPrincipal User user) {
+        Member member = getMember(user);
+        return itemService.createItem(itemRequest, member);
+    }
+
+    //상품 이미지 업로드
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/items/{itemId}")
+    @Operation(summary = "상품 이미지 업로드 api", description = "상품 이미지를 업로드하는 api 입니다.")
+    public UploadImageResponse uploadImage(@PathVariable Long itemId,
         @RequestPart(value = "file", required = false) List<MultipartFile> multipartFiles,
         @AuthenticationPrincipal User user) {
         Member member = getMember(user);
-        return itemService.create(itemRequest, multipartFiles, member);
+        return itemService.uploadItemImage(itemId, multipartFiles, member);
     }
 
     //상품 수정
@@ -85,3 +95,4 @@ public class ItemSellerController {
             .orElseThrow(() -> new BusinessException(NOT_FOUND_MEMBER));
     }
 }
+
