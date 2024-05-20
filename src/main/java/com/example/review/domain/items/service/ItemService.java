@@ -8,7 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface ItemService {
 
-    UploadImageResponse uploadItemImage(Long itemId, List<MultipartFile> multipartFiles, Member member);
+    UploadImageResponse uploadItemImage(List<MultipartFile> multipartFiles, Member member);
     CreateItemResponse createItem(ItemRequest itemRequest, Member member);
 
     UpdateItemResponse update(Long itemId, UpdateItemRequest itemRequest,

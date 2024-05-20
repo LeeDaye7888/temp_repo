@@ -49,13 +49,13 @@ public class ItemSellerController {
 
     //상품 이미지 업로드
     @ResponseStatus(HttpStatus.OK)
-    @PostMapping("/items/{itemId}")
+    @PostMapping("/items")
     @Operation(summary = "상품 이미지 업로드 api", description = "상품 이미지를 업로드하는 api 입니다.")
-    public UploadImageResponse uploadImage(@PathVariable Long itemId,
+    public UploadImageResponse uploadImage(
         @RequestPart(value = "file", required = false) List<MultipartFile> multipartFiles,
         @AuthenticationPrincipal User user) {
         Member member = getMember(user);
-        return itemService.uploadItemImage(itemId, multipartFiles, member);
+        return itemService.uploadItemImage(multipartFiles, member);
     }
 
     //상품 수정

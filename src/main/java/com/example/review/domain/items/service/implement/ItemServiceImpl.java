@@ -39,25 +39,23 @@ public class ItemServiceImpl implements ItemService {
     //상품 이미지 업로드
     @Override
     @Transactional
-    public UploadImageResponse uploadItemImage(Long itemId, List<MultipartFile> multipartFiles, Member member) {
-        Item item = itemRepository.findById(itemId)
-            .orElseThrow(()-> new BusinessException(NOT_FOUND_ITEM));
+    public UploadImageResponse uploadItemImage(List<MultipartFile> multipartFiles, Member member) {
 
-        List<String> imageUrls = s3Service.upload(multipartFiles);
-        if (imageUrls.isEmpty()) {
+        List<String> images = s3Service.upload(multipartFiles);
+        if (images.isEmpty()) {
             throw new BusinessException(REQUIRED_IMAGE, "이미지가 필수로 등록해야 합니다.");
         }
 
-        List<ItemImage> imageList = imageUrls.stream()
-            .map(url -> ItemImage.builder().imageUrl(url).item(item).build())
+        List<ItemImage> imageList = images.stream()
+            .map(url -> ItemImage.builder().imageUrl(url).build())
             .toList();
-
         List<ItemImage> savedItemImages = itemImageRepository.saveAll(imageList);
+
         List<Long> imageIds = savedItemImages.stream()
             .map(ItemImage::getItemImageId)
             .toList();
 
-        return new UploadImageResponse(imageIds, imageUrls);
+        return new UploadImageResponse(imageIds);
     }
 
 
@@ -92,7 +90,7 @@ public class ItemServiceImpl implements ItemService {
             .count(itemRequest.count())
             .member(member)
             .itemOption(itemOption)
-            .itemState(ItemState.ON_SALE) // 따로 추가함
+            .itemState(ItemState.ON_SALE)
             .build();
 
         Item savedItem = itemRepository.save(item);
