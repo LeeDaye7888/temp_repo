@@ -34,8 +34,11 @@ public record ItemRequest(
 
         @NotBlank
         @Schema(description = "상품 상세 설명", example = "가볍고 화질이 선명해요.")
-        String description
+        String description,
 
+        @NotNull
+        @Schema(description = "상품 이미지 id 리스트 ", example = "[1, 2, 3]")
+        List<Long> itemImageIds
 
 )  {
         public record Option (
