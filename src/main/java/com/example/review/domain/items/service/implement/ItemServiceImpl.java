@@ -139,16 +139,15 @@ public class ItemServiceImpl implements ItemService {
             itemOptionRepository.save(itemOption);
         }
 
-        //상품 이미지 수정했을 경우
+        //실제로 상품 이미지 수정이 있는 경우에만 기존 이미지 삭제 및 업로드 로직 실행
         if (multipartFiles != null && !multipartFiles.isEmpty()) {
-            List<String> imageUrls = s3Service.upload(multipartFiles);
-            updateImages(item, imageUrls);
+            updateImages(item, multipartFiles);
         }
 
         return new UpdateItemResponse(getItemImageIds(item), getItemImageUrls(item));
     }
 
-    private void updateImages(Item item, List<String> imageUrls) {
+    private void updateImages(Item item, List<MultipartFile> multipartFiles) {
         //수정 전 기존의 이미지들 삭제
         List<ItemImage> existingImages = itemImageRepository.findByItem(item);
         for (ItemImage image : existingImages) {
@@ -156,8 +155,9 @@ public class ItemServiceImpl implements ItemService {
             itemImageRepository.delete(image);
         }
 
-        //새로운 이미지 추가
-        List<ItemImage> newImages = imageUrls.stream()
+        //수정한 새로운 이미지 업로드
+        List<String> newImageUrls = s3Service.upload(multipartFiles);
+        List<ItemImage> newImages = newImageUrls.stream()
             .map(url -> ItemImage.builder().imageUrl(url).item(item).build())
             .toList();
         itemImageRepository.saveAll(newImages);
