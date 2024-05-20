@@ -120,15 +120,14 @@ public class ItemServiceImpl implements ItemService {
             throw new BusinessException(FORBIDDEN_ERROR, "수정할 권한이 없습니다.");
         }
 
-        // 엔티티 수정
+        //엔티티 수정
         item.updateItem(itemRequest.itemName(), itemRequest.price(),
             itemRequest.count(), itemRequest.description(), category, itemRequest.itemState());
 
-        // 상품의 기존 옵션 삭제
+        //상품 옵션 수정
         List<ItemOption> options = itemOptionRepository.findByItem(item); // 아이템 관련해서 아이템 옵션 조회
         itemOptionRepository.deleteAll(options);
 
-        //옵션 DB에 저장
         if (itemRequest.optionValue() != null && !itemRequest.optionValue().isEmpty()) {
             //옵션값 -> 엔티티 변환
             List<ItemOption.Option> optionValues = itemRequest.optionValue().stream()
@@ -140,28 +139,43 @@ public class ItemServiceImpl implements ItemService {
             itemOptionRepository.save(itemOption);
         }
 
-        // S3, 이미지DB 삭제
-        List<ItemImage> imageList = itemImageRepository.findByItem(item);
-        for (ItemImage image : imageList) {
-            String fileName = image.getImageUrl();
-            s3Service.deleteFile(fileName);
-            itemImageRepository.deleteById(image.getItemImageId());
+        //실제로 상품 이미지 수정이 있는 경우에만 기존 이미지 삭제 및 업로드 로직 실행
+        if (multipartFiles != null && !multipartFiles.isEmpty()) {
+            updateImages(item, multipartFiles);
         }
-        // S3 이미지 저장
-        List<String> imageUrls = s3Service.upload(multipartFiles);
 
-        // 이미지 정보 저장
-        List<ItemImage> images = imageUrls.stream()
-            .map(img -> ItemImage.builder().imageUrl(img).item(item).build())
-            .toList();
-        itemImageRepository.saveAll(images);
-
-        List<Long> itemImgIds = images.stream().map(ItemImage::getItemImageId).toList();
-
-        return new UpdateItemResponse(itemImgIds, imageUrls);
+        return new UpdateItemResponse(getItemImageIds(item), getItemImageUrls(item));
     }
 
-    // 상품 삭제
+    private void updateImages(Item item, List<MultipartFile> multipartFiles) {
+        //수정 전 기존의 이미지들 삭제
+        List<ItemImage> existingImages = itemImageRepository.findByItem(item);
+        for (ItemImage image : existingImages) {
+            s3Service.deleteFile(image.getImageUrl());
+            itemImageRepository.delete(image);
+        }
+
+        //수정한 새로운 이미지 업로드
+        List<String> newImageUrls = s3Service.upload(multipartFiles);
+        List<ItemImage> newImages = newImageUrls.stream()
+            .map(url -> ItemImage.builder().imageUrl(url).item(item).build())
+            .toList();
+        itemImageRepository.saveAll(newImages);
+    }
+
+    private List<Long> getItemImageIds(Item item) {
+        return itemImageRepository.findByItem(item).stream()
+            .map(ItemImage::getItemImageId)
+            .toList();
+    }
+
+    private List<String> getItemImageUrls(Item item) {
+        return itemImageRepository.findByItem(item).stream()
+            .map(ItemImage::getImageUrl)
+            .toList();
+    }
+
+    //상품 삭제
     @Override
     @Transactional
     public void delete(Long itemId, Member member) {
