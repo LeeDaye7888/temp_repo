@@ -95,6 +95,12 @@ public class ItemServiceImpl implements ItemService {
 
         Item savedItem = itemRepository.save(item);
 
+        //이미지 id 리스트로 업로드된 이미지들을 가져와서 새로 등록하는 상품과 연결
+        List<ItemImage> itemImages = itemImageRepository.findAllById(itemRequest.itemImageIds());
+        itemImages.forEach(image -> image.updateItem(savedItem)); //상품 이미지들을 등록한 새 상품과 연결 = 각 이미지 객체가 참조하는 상품을 savedItem으로 설정
+
+        itemImageRepository.saveAll(itemImages);
+
         return getCreateItemResponse(savedItem);
 
     }

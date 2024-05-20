@@ -30,4 +30,10 @@ public class ItemImage extends BaseEntity {
         this.imageUrl = imageUrl;
         this.item = item;
     }
+
+    // ItemImage가 특정 Item 엔티티와의 연결을 업데이트하기 위한 메소드
+    // ItemImage가 어떤 item의 이미지를 참조하는지 알도록 함
+    public void updateItem(Item item) {
+        this.item = item;
+    }
 }
